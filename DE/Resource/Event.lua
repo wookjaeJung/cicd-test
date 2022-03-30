@@ -1,0 +1,590 @@
+
+----------------------------------------------------------------------
+---- ÀÌº¥Æ® °ü·Ã ·ç¾Æ ÇÔ¼ö ·Îµù --------------------------------------
+----------------------------------------------------------------------
+dofile(".\\LuaFunc\\EventFunc.lua")
+
+----------------------------------------------------------------------
+-- ÀÚµ¿ °øÁö (°¢ ¼­¹ö±º TRANS Server ¸¸ ¼öÁ¤ÇÏ¸é µÅ¿ä ^^) ------------
+----------------------------------------------------------------------
+bNotice = false		-- ?? ?? ?? ??(true or false)
+Notice( 1 )
+--{ 
+	SetNoticeTime( "Any 08:00", 120 , 84 )	-- ??????, ????(MIN), ?? ??
+	AddMessage( "Das 'Erhöhtes Piercing Chance Event' Event kommt bald!" )
+--}
+
+----------------------------------------------------------------------
+---- ÃÊ±âÈ­ ----------------------------------------------------------
+----------------------------------------------------------------------
+
+-- ½Ã°£´ëº° ¾ÆÀÌÅÛ µå·Ó °¡ÁßÄ¡
+tHour = { 505, 409, 324, 280, 220, 203, 202, 212,
+	  227, 261, 302, 349, 571, 701, 764, 803,
+	  790, 789, 754, 849, 936, 940, 919, 720 }
+----------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------
+----  1. AddEvent( strDesc )				-- ÀÌº¥Æ® Ãß°¡ ¹× ¼³¸í µî·Ï
+----  2. SetTime( strStartTime, strEndTime )	-- ÇØ´ç ÀÌº¥Æ®ÀÇ ½ÃÀÛ ½Ã°£, Á¾·á ½Ã°£ µî·Ï(¿©·¯°³ ¼³Á¤ °¡´É)
+----											   ( ½Ã°£ Çü½Ä -- "2007-05-03 17:53" )
+----  3. SetItem( ItemId, nMax, nNum, nMinLevel, nMaxLevel )	-- ÀÌº¥Æ®¿ë µå·Ó ¾ÆÀÌÅÛ, ÀÏÀÏ ÃÖ´ë·®, µå·Ó °¹¼ö(·£´ý),
+----   								¾ÆÀÌÅÛÀ» µå·ÓÇÒ ¸ó½ºÅÍÀÇ ÃÖ¼Ò, ÃÖ´ë ·¹º§ - ¿©·¯°³ °¡´É
+----  4. SetExpFactor( fFactor )			-- °æÇèÁö Áõ°¡ ¹è¼ö
+----  5. SetItemDropRate( fFactor )			-- ¾ÆÀÌÅÛ µå·Ó·ü Áõ°¡ ¹è¼ö
+----  6. SetPieceItemDropRate( fFactor )		-- ¸ó½ºÅÍ°¡ °¡Áö°í ÀÖ´Â ³¹°³ ¾ÆÀÌÅÛÀÇ µå¶ø·ü Áõ°¡ ¹è¼ö
+----  7. SetGoldDropFactor( fFactor )			-- Æä³Ä µå·Ó ¹è¼ö
+----  8. SetAttackPower( nAttackPower )		-- °ø°Ý·Â Áõ°¡
+----  9. SetDefensePower( nDefensePower )		-- ¹æ¾î·Â Áõ°¡
+---- 10. SetCouponEvent( SEC(n) )			-- ÄíÆù ÀÌº¥Æ®( Á¢¼Ó½Ã°£ - SEC(n) ¶Ç´Â MIN(n) )
+---- 11. SetLevelUpGift( nLevel, "all", ItemId, nNum, byFlag, nLegendClass, nJob ) -- ·¹º§¾÷ ¼±¹°( nLevel´Þ¼º½Ã ¾ÆÀÌÅÛ Áö±Þ, "all" ºÎºÐ¿¡ Æ¯Á¤ °èÁ¤ ÁöÁ¤ °¡´É(¿¹. "__bu" - ¹öµð, "__an" - ¿£Á© ), nJobÀ¸·Î Á÷¾÷ÁöÁ¤(JOB_MAX ±âÀÔ½Ã ¸ðµç Á÷¾÷) 
+---- 12. SetCheerExpFactor( fFactor )			-- ÀÀ¿ø °æÇèÄ¡ ¼³Á¤
+---- 13. SetSpawn( TYPE, strId, nNum, byFlag )		-- ½ºÆùÀÌº¥Æ® : Type - ITEM ¶Ç´Â MONSTER, ID, 1ÀÏ ½ºÆù·®, ÇÃ·¡±×°ª( ¾ÆÀÌÅÛ : 0-ÀÏ¹Ý, 2-±Í¼Ó / ¸ó½ºÅÍ : ¼±°ø¿©ºÎ ¼ÂÆÃ(0:ºñ¼±°ø, 1:¼±°ø) 
+---- 14. SetKeepConnectEvent( nTime, strItemId, nItemNum, byFlag )	-- ´©Àû Á¢¼Ó ¾ÆÀÌÅÛ Áö±Þ ÀÌº¥Æ®( Á¢¼Ó½Ã°£, ¾ÆÀÌÅÛ ID, ¾ÆÀÌÅÛ °³¼ö, ÇÃ·¡±×°ª:0-ÀÏ¹Ý, 2-±Í¼Ó )
+---- 15. SetWeatherEvent( fExpFactor, strTitle )		-- ³¯¾¾ÀÌº¥Æ®(°æÇèÄ¡ Áõ°¡ ¹è¼ö, ³¯¾¾ ÀÌº¥Æ® Á¦¸ñ) : 15Â÷¿¡ Ãß°¡µÊ
+---- 16. SetShopBuyFactor( fBuyFactor )		-- »óÁ¡ °¡°Ý ºñÀ² º¯°æ(À¯Àú°¡ »ç´Â °¡°Ý ºñÀ² º¯°æ)
+---- 17. SetShopSellFactor( fSellFactor )		-- »óÁ¡ °¡°Ý ºñÀ² º¯°æ(À¯Àú°¡ ÆÄ´Â °¡°Ý ºñÀ² º¯°æ)
+---- 18. SetTroupeExpUpEvent( nTroupeMemberCount, fExpFactor )	-- ±Ø´Ü »ç³É ½Ã °æÇèÄ¡ Áõ°¡ ¹è¼ö( È¿°ú Àû¿ë ¹Þ±â À§ÇÑ ÃÖ¼Ò ±Ø´Ü¿ø ¼ö, °æÇèÄ¡ Áõ°¡ ¹è¼ö )
+---- 19. SetDailyKeepConnectEvent( ¿äÀÏ(0 = Sunday, 1 = Monday, ..., 6 = Saturday), Á¢¼Ó½Ã°£, ¾ÆÀÌÅÛ ¾ÆÀÌµð, ÃÖ¼ÒÁö±Þ°³¼ö(ÀÏ¹Ý¸ðµå), ÃÖ´ëÁö±Þ°³¼ö(¹ö´×¸ðµå), ¾ÆÀÌÅÛ ÇÃ·¡±×:0-ÀÏ¹Ý, 2-±Í¼Ó )
+---- *** ÀÌº¥Æ® Ãß°¡ µî·Ï½Ã 1¹øºÎÅÍ ¹Ýº¹ÇÏ°í 3~19¹øÀº ÇÊ¿ä¿¡ µû¶ó »ý·«°¡´ÉÇÏ´Ù.
+----------------------------------------------------------------------------------------------------------------
+--[[ SAMPLE
+AddEvent( "EVENT TEST 01" )
+--{
+	SetTime( "2007-06-08 14:23", "2007-06-08 16:11" )
+	SetTime( "2007-06-09 14:23", "2007-06-10 00:00" )
+	
+	SetItem( "II_SYS_SYS_EVE_HAPPYMONEY01", 30000, 5, 15, 80 )
+	SetItem( "II_SYS_SYS_EVE_PUMPKIN01", 2000, 3, 81, 150 )
+	SetExpFactor( 2 )
+	SetItemDropRate( 2 )
+	SetPieceItemDropRate( 2 )
+	SetGoldDropFactor( 2 )
+	SetAttackPower( 150 )
+	SetDefensePower( 100 )
+	SetCouponEvent( MIN(120) )
+	SetLevelUpGift( 60, "all", "II_SYS_SYS_SCR_BX_PET_LAWOLF7", 1, 2, LEGEND_CLASS_NORMAL, JOB_KNIGHT )
+	SetLevelUpGift( 80, "all", "II_SYS_SYS_SCR_BX_PET_LAWOLF7", 1, 2, LEGEND_CLASS_MASTER, JOB_KNIGHT_MASTER )
+	SetLevelUpGift( 125, "all", "II_SYS_SYS_SCR_BX_PET_LAWOLF7", 1, 2, LEGEND_CLASS_HERO, JOB_KNIGHT_HERO)
+	SetLevelUpGift( 140, "all", "II_SYS_SYS_SCR_BX_PET_LAWOLF7", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_LORDTEMPLER_HERO )
+	SetCheerExpFactor( 1.3 )
+	SetSpawn( ITEM, "II_SYS_SYS_EVE_HAPPYMONEY01", 10000, 0 )
+	SetSpawn( ITEM, "II_SYS_SYS_EVE_HAPPYMONEY01", 10000, 2 )
+	SetSpawn( MONSTER, "MI_AIBATT1", 2000, 0 )
+	SetSpawn( MONSTER, "MI_AIBATT4", 2000, 1 )
+	SetKeepConnectEvent( MIN(60), "II_SYS_SYS_SCR_BXTREASURE01", 1, 2 )
+	SetWeatherEvent( 2, "ºñ°¡¿À¸é °æÇèÄ¡°¡ 2¹è~!" )
+	SetShopBuyFactor( 1.5 )
+	SetShopSellFactor( 0.5 )
+	SetTroupeExpUpEvent( 8, 1.2 )
+	SetDailyKeepConnectEvent( 0, MIN(60), "II_SYS_SYS_SCR_BXTREASURE01", 1, 3, 2 )
+	SetDailyKeepConnectEvent( 1, MIN(60), "II_SYS_SYS_SCR_BXTREASURE01", 1, 3, 2 )
+	SetDailyKeepConnectEvent( 2, MIN(60), "II_SYS_SYS_SCR_BXTREASURE01", 1, 3, 2 )
+	SetDailyKeepConnectEvent( 3, MIN(60), "II_SYS_SYS_SCR_BXTREASURE01", 1, 3, 2 )
+	SetDailyKeepConnectEvent( 4, MIN(60), "II_SYS_SYS_SCR_BXTREASURE01", 1, 3, 2 )
+	SetDailyKeepConnectEvent( 5, MIN(60), "II_SYS_SYS_SCR_BXTREASURE01", 1, 3, 2 )
+	SetDailyKeepConnectEvent( 6, MIN(60), "II_SYS_SYS_SCR_BXTREASURE01", 1, 3, 2 )
+--}
+--]]
+
+-------------------------------------------------------------------------
+---- Begin Script -------------------------------------------------------
+-------------------------------------------------------------------------
+
+AddEvent( "Level Up booster event" )	
+
+--{	
+	SetTime( "2021-09-09 00:00", "2021-09-12 23:59" )
+	SetTime( "2021-09-15 07:00", "2021-10-06 07:00" )
+	SetLevelUpGift( 2, "all", "II_SYS_SYS_RANDOMBOOSTERBX5", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 3, "all", "II_SYS_SYS_RANDOMBOOSTERBX5", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 4, "all", "II_SYS_SYS_RANDOMBOOSTERBX5", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 5, "all", "II_SYS_SYS_RANDOMBOOSTERBX5", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 6, "all", "II_SYS_SYS_RANDOMBOOSTERBX5", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 7, "all", "II_SYS_SYS_RANDOMBOOSTERBX5", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 8, "all", "II_SYS_SYS_RANDOMBOOSTERBX5", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 9, "all", "II_SYS_SYS_RANDOMBOOSTERBX5", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 10, "all", "II_SYS_SYS_RANDOMBOOSTERBX5", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 11, "all", "II_SYS_SYS_RANDOMBOOSTERBX15", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 12, "all", "II_SYS_SYS_RANDOMBOOSTERBX15", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 13, "all", "II_SYS_SYS_RANDOMBOOSTERBX15", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 14, "all", "II_SYS_SYS_RANDOMBOOSTERBX15", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 15, "all", "II_SYS_SYS_RANDOMBOOSTERBX15", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 16, "all", "II_SYS_SYS_RANDOMBOOSTERBX15", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 17, "all", "II_SYS_SYS_RANDOMBOOSTERBX15", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 18, "all", "II_SYS_SYS_RANDOMBOOSTERBX15", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 19, "all", "II_SYS_SYS_RANDOMBOOSTERBX15", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 20, "all", "II_SYS_SYS_RANDOMBOOSTERBX15", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 21, "all", "II_SYS_SYS_RANDOMBOOSTERBX25", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 22, "all", "II_SYS_SYS_RANDOMBOOSTERBX25", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 23, "all", "II_SYS_SYS_RANDOMBOOSTERBX25", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 24, "all", "II_SYS_SYS_RANDOMBOOSTERBX25", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 25, "all", "II_SYS_SYS_RANDOMBOOSTERBX25", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 26, "all", "II_SYS_SYS_RANDOMBOOSTERBX25", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 27, "all", "II_SYS_SYS_RANDOMBOOSTERBX25", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 28, "all", "II_SYS_SYS_RANDOMBOOSTERBX25", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 29, "all", "II_SYS_SYS_RANDOMBOOSTERBX25", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 30, "all", "II_SYS_SYS_RANDOMBOOSTERBX25", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 31, "all", "II_SYS_SYS_RANDOMBOOSTERBX35", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 32, "all", "II_SYS_SYS_RANDOMBOOSTERBX35", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 33, "all", "II_SYS_SYS_RANDOMBOOSTERBX35", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 34, "all", "II_SYS_SYS_RANDOMBOOSTERBX35", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 35, "all", "II_SYS_SYS_RANDOMBOOSTERBX35", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 36, "all", "II_SYS_SYS_RANDOMBOOSTERBX35", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 37, "all", "II_SYS_SYS_RANDOMBOOSTERBX35", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 38, "all", "II_SYS_SYS_RANDOMBOOSTERBX35", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 39, "all", "II_SYS_SYS_RANDOMBOOSTERBX35", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 40, "all", "II_SYS_SYS_RANDOMBOOSTERBX35", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 41, "all", "II_SYS_SYS_RANDOMBOOSTERBX45", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 42, "all", "II_SYS_SYS_RANDOMBOOSTERBX45", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 43, "all", "II_SYS_SYS_RANDOMBOOSTERBX45", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 44, "all", "II_SYS_SYS_RANDOMBOOSTERBX45", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 45, "all", "II_SYS_SYS_RANDOMBOOSTERBX45", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 46, "all", "II_SYS_SYS_RANDOMBOOSTERBX45", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 47, "all", "II_SYS_SYS_RANDOMBOOSTERBX45", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 48, "all", "II_SYS_SYS_RANDOMBOOSTERBX45", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 49, "all", "II_SYS_SYS_RANDOMBOOSTERBX45", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 50, "all", "II_SYS_SYS_RANDOMBOOSTERBX45", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 51, "all", "II_SYS_SYS_RANDOMBOOSTERBX55", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 52, "all", "II_SYS_SYS_RANDOMBOOSTERBX55", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 53, "all", "II_SYS_SYS_RANDOMBOOSTERBX55", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 54, "all", "II_SYS_SYS_RANDOMBOOSTERBX55", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 55, "all", "II_SYS_SYS_RANDOMBOOSTERBX55", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 56, "all", "II_SYS_SYS_RANDOMBOOSTERBX55", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 57, "all", "II_SYS_SYS_RANDOMBOOSTERBX55", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 58, "all", "II_SYS_SYS_RANDOMBOOSTERBX55", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 59, "all", "II_SYS_SYS_RANDOMBOOSTERBX55", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 60, "all", "II_SYS_SYS_RANDOMBOOSTERBX55", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 61, "all", "II_SYS_SYS_RANDOMBOOSTERBX65", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 62, "all", "II_SYS_SYS_RANDOMBOOSTERBX65", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 63, "all", "II_SYS_SYS_RANDOMBOOSTERBX65", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 64, "all", "II_SYS_SYS_RANDOMBOOSTERBX65", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 65, "all", "II_SYS_SYS_RANDOMBOOSTERBX65", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 66, "all", "II_SYS_SYS_RANDOMBOOSTERBX65", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 67, "all", "II_SYS_SYS_RANDOMBOOSTERBX65", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 68, "all", "II_SYS_SYS_RANDOMBOOSTERBX65", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 69, "all", "II_SYS_SYS_RANDOMBOOSTERBX65", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 70, "all", "II_SYS_SYS_RANDOMBOOSTERBX65", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 71, "all", "II_SYS_SYS_RANDOMBOOSTERBX75", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 72, "all", "II_SYS_SYS_RANDOMBOOSTERBX75", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 73, "all", "II_SYS_SYS_RANDOMBOOSTERBX75", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 74, "all", "II_SYS_SYS_RANDOMBOOSTERBX75", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 75, "all", "II_SYS_SYS_RANDOMBOOSTERBX75", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 76, "all", "II_SYS_SYS_RANDOMBOOSTERBX75", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 77, "all", "II_SYS_SYS_RANDOMBOOSTERBX75", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 78, "all", "II_SYS_SYS_RANDOMBOOSTERBX75", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 79, "all", "II_SYS_SYS_RANDOMBOOSTERBX75", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 80, "all", "II_SYS_SYS_RANDOMBOOSTERBX75", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 81, "all", "II_SYS_SYS_RANDOMBOOSTERBX85", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 82, "all", "II_SYS_SYS_RANDOMBOOSTERBX85", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 83, "all", "II_SYS_SYS_RANDOMBOOSTERBX85", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 84, "all", "II_SYS_SYS_RANDOMBOOSTERBX85", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 85, "all", "II_SYS_SYS_RANDOMBOOSTERBX85", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 86, "all", "II_SYS_SYS_RANDOMBOOSTERBX85", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 87, "all", "II_SYS_SYS_RANDOMBOOSTERBX85", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 88, "all", "II_SYS_SYS_RANDOMBOOSTERBX85", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 89, "all", "II_SYS_SYS_RANDOMBOOSTERBX85", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 90, "all", "II_SYS_SYS_RANDOMBOOSTERBX85", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 91, "all", "II_SYS_SYS_RANDOMBOOSTERBX95", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 92, "all", "II_SYS_SYS_RANDOMBOOSTERBX95", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 93, "all", "II_SYS_SYS_RANDOMBOOSTERBX95", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 94, "all", "II_SYS_SYS_RANDOMBOOSTERBX95", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 95, "all", "II_SYS_SYS_RANDOMBOOSTERBX95", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 96, "all", "II_SYS_SYS_RANDOMBOOSTERBX95", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 97, "all", "II_SYS_SYS_RANDOMBOOSTERBX95", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 98, "all", "II_SYS_SYS_RANDOMBOOSTERBX95", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 99, "all", "II_SYS_SYS_RANDOMBOOSTERBX95", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 100, "all", "II_SYS_SYS_RANDOMBOOSTERBX95", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 101, "all", "II_SYS_SYS_RANDOMBOOSTERBX105", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 102, "all", "II_SYS_SYS_RANDOMBOOSTERBX105", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 103, "all", "II_SYS_SYS_RANDOMBOOSTERBX105", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 104, "all", "II_SYS_SYS_RANDOMBOOSTERBX105", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 105, "all", "II_SYS_SYS_RANDOMBOOSTERBX105", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 106, "all", "II_SYS_SYS_RANDOMBOOSTERBX105", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 107, "all", "II_SYS_SYS_RANDOMBOOSTERBX105", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 108, "all", "II_SYS_SYS_RANDOMBOOSTERBX105", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 109, "all", "II_SYS_SYS_RANDOMBOOSTERBX105", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 110, "all", "II_SYS_SYS_RANDOMBOOSTERBX105", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 111, "all", "II_SYS_SYS_RANDOMBOOSTERBX115", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 112, "all", "II_SYS_SYS_RANDOMBOOSTERBX115", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 113, "all", "II_SYS_SYS_RANDOMBOOSTERBX115", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 114, "all", "II_SYS_SYS_RANDOMBOOSTERBX115", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 115, "all", "II_SYS_SYS_RANDOMBOOSTERBX115", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 116, "all", "II_SYS_SYS_RANDOMBOOSTERBX115", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 117, "all", "II_SYS_SYS_RANDOMBOOSTERBX115", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 118, "all", "II_SYS_SYS_RANDOMBOOSTERBX115", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 119, "all", "II_SYS_SYS_RANDOMBOOSTERBX115", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 120, "all", "II_SYS_SYS_RANDOMBOOSTERBX115", 1, 2, LEGEND_CLASS_NORMAL, JOB_MAX )
+	SetLevelUpGift( 61, "all", "II_SYS_SYS_RANDOMBOOSTERBXM65", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 62, "all", "II_SYS_SYS_RANDOMBOOSTERBXM65", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 63, "all", "II_SYS_SYS_RANDOMBOOSTERBXM65", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 64, "all", "II_SYS_SYS_RANDOMBOOSTERBXM65", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 65, "all", "II_SYS_SYS_RANDOMBOOSTERBXM65", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 66, "all", "II_SYS_SYS_RANDOMBOOSTERBXM65", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 67, "all", "II_SYS_SYS_RANDOMBOOSTERBXM65", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 68, "all", "II_SYS_SYS_RANDOMBOOSTERBXM65", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 69, "all", "II_SYS_SYS_RANDOMBOOSTERBXM65", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 70, "all", "II_SYS_SYS_RANDOMBOOSTERBXM65", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 71, "all", "II_SYS_SYS_RANDOMBOOSTERBXM75", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 72, "all", "II_SYS_SYS_RANDOMBOOSTERBXM75", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 73, "all", "II_SYS_SYS_RANDOMBOOSTERBXM75", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 74, "all", "II_SYS_SYS_RANDOMBOOSTERBXM75", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 75, "all", "II_SYS_SYS_RANDOMBOOSTERBXM75", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 76, "all", "II_SYS_SYS_RANDOMBOOSTERBXM75", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 77, "all", "II_SYS_SYS_RANDOMBOOSTERBXM75", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 78, "all", "II_SYS_SYS_RANDOMBOOSTERBXM75", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 79, "all", "II_SYS_SYS_RANDOMBOOSTERBXM75", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 80, "all", "II_SYS_SYS_RANDOMBOOSTERBXM75", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 81, "all", "II_SYS_SYS_RANDOMBOOSTERBXM85", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 82, "all", "II_SYS_SYS_RANDOMBOOSTERBXM85", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 83, "all", "II_SYS_SYS_RANDOMBOOSTERBXM85", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 84, "all", "II_SYS_SYS_RANDOMBOOSTERBXM85", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 85, "all", "II_SYS_SYS_RANDOMBOOSTERBXM85", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 86, "all", "II_SYS_SYS_RANDOMBOOSTERBXM85", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 87, "all", "II_SYS_SYS_RANDOMBOOSTERBXM85", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 88, "all", "II_SYS_SYS_RANDOMBOOSTERBXM85", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 89, "all", "II_SYS_SYS_RANDOMBOOSTERBXM85", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 90, "all", "II_SYS_SYS_RANDOMBOOSTERBXM85", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 91, "all", "II_SYS_SYS_RANDOMBOOSTERBXM95", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 92, "all", "II_SYS_SYS_RANDOMBOOSTERBXM95", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 93, "all", "II_SYS_SYS_RANDOMBOOSTERBXM95", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 94, "all", "II_SYS_SYS_RANDOMBOOSTERBXM95", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 95, "all", "II_SYS_SYS_RANDOMBOOSTERBXM95", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 96, "all", "II_SYS_SYS_RANDOMBOOSTERBXM95", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 97, "all", "II_SYS_SYS_RANDOMBOOSTERBXM95", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 98, "all", "II_SYS_SYS_RANDOMBOOSTERBXM95", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 99, "all", "II_SYS_SYS_RANDOMBOOSTERBXM95", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 100, "all", "II_SYS_SYS_RANDOMBOOSTERBXM95", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 101, "all", "II_SYS_SYS_RANDOMBOOSTERBXM105", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 102, "all", "II_SYS_SYS_RANDOMBOOSTERBXM105", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 103, "all", "II_SYS_SYS_RANDOMBOOSTERBXM105", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 104, "all", "II_SYS_SYS_RANDOMBOOSTERBXM105", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 105, "all", "II_SYS_SYS_RANDOMBOOSTERBXM105", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 106, "all", "II_SYS_SYS_RANDOMBOOSTERBXM105", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 107, "all", "II_SYS_SYS_RANDOMBOOSTERBXM105", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 108, "all", "II_SYS_SYS_RANDOMBOOSTERBXM105", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 109, "all", "II_SYS_SYS_RANDOMBOOSTERBXM105", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 110, "all", "II_SYS_SYS_RANDOMBOOSTERBXM105", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 111, "all", "II_SYS_SYS_RANDOMBOOSTERBXM115", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 112, "all", "II_SYS_SYS_RANDOMBOOSTERBXM115", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 113, "all", "II_SYS_SYS_RANDOMBOOSTERBXM115", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 114, "all", "II_SYS_SYS_RANDOMBOOSTERBXM115", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 115, "all", "II_SYS_SYS_RANDOMBOOSTERBXM115", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 116, "all", "II_SYS_SYS_RANDOMBOOSTERBXM115", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 117, "all", "II_SYS_SYS_RANDOMBOOSTERBXM115", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 118, "all", "II_SYS_SYS_RANDOMBOOSTERBXM115", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 119, "all", "II_SYS_SYS_RANDOMBOOSTERBXM115", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 120, "all", "II_SYS_SYS_RANDOMBOOSTERBXM115", 1, 2, LEGEND_CLASS_MASTER, JOB_MAX )
+	SetLevelUpGift( 121, "all", "II_SYS_SYS_RANDOMBOOSTERBXM121", 1, 2, LEGEND_CLASS_HERO, JOB_MAX )
+	SetLevelUpGift( 122, "all", "II_SYS_SYS_RANDOMBOOSTERBXM121", 1, 2, LEGEND_CLASS_HERO, JOB_MAX )
+	SetLevelUpGift( 123, "all", "II_SYS_SYS_RANDOMBOOSTERBXM121", 1, 2, LEGEND_CLASS_HERO, JOB_MAX )
+	SetLevelUpGift( 124, "all", "II_SYS_SYS_RANDOMBOOSTERBXM121", 1, 2, LEGEND_CLASS_HERO, JOB_MAX )
+	SetLevelUpGift( 125, "all", "II_SYS_SYS_RANDOMBOOSTERBXM121", 1, 2, LEGEND_CLASS_HERO, JOB_MAX )
+	SetLevelUpGift( 126, "all", "II_SYS_SYS_RANDOMBOOSTERBXM121", 1, 2, LEGEND_CLASS_HERO, JOB_MAX )
+	SetLevelUpGift( 127, "all", "II_SYS_SYS_RANDOMBOOSTERBXM121", 1, 2, LEGEND_CLASS_HERO, JOB_MAX )
+	SetLevelUpGift( 128, "all", "II_SYS_SYS_RANDOMBOOSTERBXM121", 1, 2, LEGEND_CLASS_HERO, JOB_MAX )
+	SetLevelUpGift( 129, "all", "II_SYS_SYS_RANDOMBOOSTERBXM121", 1, 2, LEGEND_CLASS_HERO, JOB_MAX )
+	SetLevelUpGift( 130, "all", "II_SYS_SYS_RANDOMBOOSTERBXM121", 1, 2, LEGEND_CLASS_HERO, JOB_MAX )
+	SetLevelUpGift( 131, "all", "II_SYS_SYS_RANDOMBOOSTERBXM131", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 132, "all", "II_SYS_SYS_RANDOMBOOSTERBXM131", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 133, "all", "II_SYS_SYS_RANDOMBOOSTERBXM131", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 134, "all", "II_SYS_SYS_RANDOMBOOSTERBXM131", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 135, "all", "II_SYS_SYS_RANDOMBOOSTERBXM131", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 136, "all", "II_SYS_SYS_RANDOMBOOSTERBXM131", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 137, "all", "II_SYS_SYS_RANDOMBOOSTERBXM131", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 138, "all", "II_SYS_SYS_RANDOMBOOSTERBXM131", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 139, "all", "II_SYS_SYS_RANDOMBOOSTERBXM131", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 140, "all", "II_SYS_SYS_RANDOMBOOSTERBXM131", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 141, "all", "II_SYS_SYS_RANDOMBOOSTERBXM141", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 142, "all", "II_SYS_SYS_RANDOMBOOSTERBXM141", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 143, "all", "II_SYS_SYS_RANDOMBOOSTERBXM141", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 144, "all", "II_SYS_SYS_RANDOMBOOSTERBXM141", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 145, "all", "II_SYS_SYS_RANDOMBOOSTERBXM141", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 146, "all", "II_SYS_SYS_RANDOMBOOSTERBXM141", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 147, "all", "II_SYS_SYS_RANDOMBOOSTERBXM141", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 148, "all", "II_SYS_SYS_RANDOMBOOSTERBXM141", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 149, "all", "II_SYS_SYS_RANDOMBOOSTERBXM141", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+	SetLevelUpGift( 150, "all", "II_SYS_SYS_RANDOMBOOSTERBXM141", 1, 2, LEGEND_CLASS_LEGEND_HERO, JOB_MAX )
+--}	
+
+AddEvent( "Süße Invasion !" )
+--{
+	SetTime( "2021-07-16 08:00", "2021-07-18 23:59" )
+	SetTime( "2021-07-23 00:00", "2021-07-25 23:59" )
+	SetSpawn( MONSTER, "MI_SAPHYRYAN", 1600, 0 )
+	SetSpawn( MONSTER, "MI_BURR", 1600, 0 )
+	SetSpawn( MONSTER, "MI_GRAYEARL", 1600, 0 )
+	SetSpawn( MONSTER, "MI_GRAYEARL01", 1600, 0 )
+	SetSpawn( MONSTER, "MI_CLOCKWORKBUTLER01", 1600, 0 )
+--}
+
+AddEvent( "EXP X2" )
+--{
+	SetTime( "2022-02-22 00:00", "2022-02-23 23:59" )
+	SetTime( "2022-03-04 00:00", "2022-03-07 23:59" )
+
+	SetExpFactor( 2 )
+
+--}
+
+AddEvent( "Drop X2" )
+--{
+	SetTime( "2022-02-22 00:00", "2022-02-23 23:59" )
+	SetTime( "2022-03-04 00:00", "2022-03-07 23:59" )
+
+	SetItemDropRate( 2 )
+	
+--}
+
+AddEvent( "Power-Up Event (ATK +200, DEF +200)" )
+--{
+	SetTime( "2021-06-08 00:00", "2021-06-08 23:59" )
+	SetTime( "2021-06-25 00:00", "2021-06-27 23:59" )
+
+	SetAttackPower( 200 )
+	SetDefensePower( 200 )
+
+--}
+
+AddEvent( "Regnerischer EXP Boost (x2)" )
+--{
+	SetTime( "2021-02-16 00:00", "2021-02-16 23:59" )
+	SetTime( "2021-02-19 00:00", "2021-02-21 23:59" )
+
+	SetWeatherEvent( 2, "Regnerischer EXP Boost (x2)" )
+
+--}
+
+AddEvent( "Drop Event für Kostümverbesserungen" )
+--{
+           	SetTime( "2021-06-25 08:00", "2021-06-28 23:59" )
+			SetTime( "2021-07-09 00:00", "2021-07-11 23:59" )
+           SetItem( "II_GEN_MAT_ELE_CURRENTDUST", 2500, 1, 15, 172 )
+		   SetItem( "II_GEN_MAT_LIGHTNINGSTONE", 1500, 1, 15, 172 )
+		   SetItem( "II_SYS_SYS_SCR_GARNET", 300, 1, 15, 172 )
+		   SetItem( "II_SYS_SYS_SCR_TURQUOISE", 300, 1, 15, 172 )
+		   SetItem( "II_SYS_SYS_SCR_AQUAMARINE", 300, 1, 15, 172 )
+		   SetItem( "II_SYS_SYS_SCR_AMETHYST", 300, 1, 15, 172 )
+		   SetItem( "II_GEN_MAT_GARNET", 100, 1, 15, 172 )
+		   SetItem( "II_GEN_MAT_TURQUOISE", 100, 1, 15, 172 )
+		   SetItem( "II_GEN_MAT_AQUAMARINE", 100, 1, 15, 172 )
+		   SetItem( "II_GEN_MAT_AMETHYST", 100, 1, 15, 172 )
+--}
+
+AddEvent( "Bossjagd Event" )
+--{
+	SetTime( "2022-01-14 00:00", "2022-01-16 23:59" )
+	SetTime( "2022-01-21 00:00", "2022-01-21 23:59" )
+	SetSpawn( MONSTER, "MI_CLOCKWORK1", 1, 0 )
+	SetSpawn( MONSTER, "MI_RANGDA03", 1, 0 )
+	SetSpawn( MONSTER, "MI_SHIPHARPINEES", 1, 0 )
+	SetSpawn( MONSTER, "MI_VEMPAIN01", 1, 0 )
+	SetSpawn( MONSTER, "MI_RYBARGA", 1, 0 )
+	SetSpawn( MONSTER, "MI_KRRR2", 1, 0 )
+	SetSpawn( MONSTER, "MI_ANT1", 1, 0 )
+--}
+
+AddEvent( "Bossjagd Event" )
+--{
+	SetTime( "2022-01-14 00:00", "2022-01-16 23:59" )
+	SetTime( "2022-01-22 00:00", "2022-01-22 23:59" )
+	SetSpawn( MONSTER, "MI_RANGDA02", 1, 0 )
+	SetSpawn( MONSTER, "MI_HERNKRAKEN01", 1, 0 )
+	SetSpawn( MONSTER, "MI_SHIPHARPINEES_1", 1, 0 )
+	SetSpawn( MONSTER, "MI_TUTTLEKING01", 1, 0 )
+	SetSpawn( MONSTER, "MI_BEHEMOTH", 1, 0 )
+	SetSpawn( MONSTER, "MI_MUSHMOOT2", 1, 0 )
+	SetSpawn( MONSTER, "MI_WOODSPIRITBOSS1", 1, 0 )
+--}
+
+AddEvent( "Bossjagd Event" )
+--{
+	SetTime( "2022-01-14 00:00", "2022-01-16 23:59" )
+	SetTime( "2022-01-23 00:00", "2022-01-23 23:59" )
+	SetSpawn( MONSTER, "MI_DREAMQEEN01", 1, 0 )
+	SetSpawn( MONSTER, "MI_HERNKRAKEN01_1", 1, 0 )
+	SetSpawn( MONSTER, "MI_DU_METEONYKER2", 1, 0 )
+	SetSpawn( MONSTER, "MI_SKELGENERAL", 1, 0 )
+	SetSpawn( MONSTER, "MI_BASILISK", 1, 0 )
+	SetSpawn( MONSTER, "MI_DU_METEONYKER5", 1, 0 )
+	SetSpawn( MONSTER, "MI_GIANTTREEQ1", 1, 0 )
+--}
+
+AddEvent( "Bossjagd Event" )
+--{
+	SetTime( "2022-01-14 00:00", "2022-01-16 23:59" )
+	SetTime( "2022-01-24 00:00", "2022-01-24 23:59" )
+	SetSpawn( MONSTER, "MI_DREAMQEEN01_1", 1, 0 )
+	SetSpawn( MONSTER, "MI_RANGDA04", 1, 0 )
+	SetSpawn( MONSTER, "MI_LYCANOS01", 1, 0 )
+	SetSpawn( MONSTER, "MI_SKELDEVIL", 1, 0 )
+	SetSpawn( MONSTER, "MI_KALGASBOSS", 1, 0 )
+	SetSpawn( MONSTER, "MI_IBLESSPUPPET", 1, 0 )
+	SetSpawn( MONSTER, "MI_GIANTTREEK1", 1, 0 )
+--}
+
+AddEvent( "Steinschlag Event" )
+--{
+	SetTime( "2021-12-07 00:00", "2021-12-08 23:59" )
+	SetTime( "2021-12-10 00:00", "2021-12-12 23:59" )
+	SetItem( "II_SYS_SYS_SCR_SCRAPMOONSTONE", 2000, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_SCRAPORICHALCUM", 1400, 1, 15, 172 )
+	SetItem( "II_GEN_MAT_ELE_CURRENTDUST", 2000, 1, 15, 172 )
+	SetItem( "II_GEN_MAT_LIGHTNINGSTONE", 500, 1, 15, 172 )
+	SetItem( "II_GEN_MAT_COSMOSTONE", 150, 1, 15, 172 )
+	SetItem( "II_GEN_MAT_ORICHALCUM01", 400, 1, 15, 172 )
+	SetItem( "II_GEN_MAT_MOONSTONE", 500, 1, 15, 172 )
+	SetItem( "II_GEN_MAT_OPERCID", 300, 1, 15, 172 )
+--}
+
+AddEvent( "Power-Ups im Überfluss!" )		
+--{		
+	SetTime( "2022-03-21 00:00", "2022-03-23 23:59" )	
+	SetTime( "2022-04-01 00:00", "2022-04-04 23:59" )	
+	SetItem( "II_SYS_SYS_SCR_COTTONCANDYBLUE_01", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_COTTONCANDYGREEN_01", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_COTTONCANDYRED_01", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_COTTONCANDYBLUESKY_01", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_COTTONCANDYYELLOW_01", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_COTTONCANDYWHITE_01", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_COTTONCANDYBLUE", 400, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_COTTONCANDYGREEN", 400, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_COTTONCANDYRED", 400, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_COTTONCANDYBLUESKY", 400, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_COTTONCANDYYELLOW", 400, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_COTTONCANDYWHITE", 400, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_EVE_BALLOON_EVENT_PI", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_EVE_BALLOON_EVENT_BL", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_EVE_BALLOON_EVENT_YE", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_EVE_FOOTBALLRED01", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_EVE_FOOTBALLBLACK01", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_EVE_FOOTBALLBLUE01", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_EVE_GREENEGG1", 180, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_EVE_BLUEGG1", 180, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_EVE_REDEGG1", 180, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_EVE_YELLOWEGG1", 180, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_EVE_WHITEGG1", 180, 1, 15, 172 )
+	SetItem( "II_SYS_BearDoll_Blue", 50, 1, 15, 172 )
+	SetItem( "II_SYS_BearDoll_Yellow", 50, 1, 15, 172 )
+	SetItem( "II_SYS_BearDoll_Pink", 50, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_MACARONINDIGO", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_MACARONAZALEA", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_MACARONYGREEN", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_MACARONREDBEAN", 60, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_MACARONGOLD", 60, 1, 15, 172 )
+--}
+
+AddEvent( "1 Jahr-Jubiläum Buchstaben Sammel Event" )
+--{
+	SetTime( "2021-09-09 00:00", "2021-09-12 23:59" )
+	SetTime( "2021-09-15 07:00", "2021-10-06 07:00" )
+	SetSpawn( MONSTER, "MI_MOCOMOCHI_1ST", 3000, 0 )
+--}
+
+AddEvent( "Regnerischer EXP Boost (x2)" )
+--{
+	SetTime( "2022-03-21 00:00", "2022-03-23 23:59" )
+	SetTime( "2022-03-25 00:00", "2022-03-28 23:59" )
+
+	SetWeatherEvent( 2, "Regnerischer EXP Boost (x2)" )
+
+--}
+
+AddEvent( "Halloween Event" )
+--{
+	SetTime( "2021-09-30 00:00", "2021-10-04 23:59" )
+	SetTime( "2021-10-06 07:00", "2021-10-12 23:59" )
+	SetTime( "2021-10-17 00:00", "2021-10-29 23:59" )
+	SetTime( "2021-11-02 00:00", "2021-11-03 07:00" )
+	SetSpawn( MONSTER, "MI_NMZOMBIE", 35000, 0 )
+	SetSpawn( MONSTER, "MI_NFZOMBIE", 35000, 0 )
+	SetItem( "II_SYS_SYS_EVE_GARLIC_2021", 125000, 1, 15, 170 )
+	SetItem( "II_SYS_SYS_EVE_CROSS_2021", 125000, 1, 15, 170 )
+	SetItem( "II_GEN_GEM_GEM_GASEUKAEN_2021", 12500, 1, 15, 170 )
+--}
+
+AddEvent( "Besonderes Halloween Doppel Event" )
+--{
+	SetTime( "2021-10-13 00:00", "2021-10-17 23:59" )
+	SetTime( "2021-10-29 00:00", "2021-11-01 23:59" )
+	SetSpawn( MONSTER, "MI_NMZOMBIE", 35000, 0 )
+	SetSpawn( MONSTER, "MI_NFZOMBIE", 35000, 0 )
+	SetItem( "II_GEN_GEM_GEM_GASEUKAEN_2021", 12500, 1, 15, 170 )
+	SetItem( "II_SYS_SYS_EVE_GARLIC_2021", 250000, 1, 15, 170 )
+	SetItem( "II_SYS_SYS_EVE_CROSS_2021", 250000, 1, 15, 170 )
+	SetItemDropRate( 2 )
+	SetExpFactor( 2 )
+--}
+
+AddEvent( "Drop Event für Kostümverbesserungen" )
+--{
+	SetTime( "2021-10-13 00:00", "2021-10-17 23:59" )
+	SetTime( "2021-10-22 00:00", "2021-10-24 23:59" )
+	SetItem( "II_GEN_MAT_ELE_CURRENTDUST", 2500, 1, 15, 170 )
+	SetItem( "II_GEN_MAT_LIGHTNINGSTONE", 1500, 1, 15, 170 )
+	SetItem( "II_SYS_SYS_SCR_GARNET", 300, 1, 15, 170 )
+	SetItem( "II_SYS_SYS_SCR_TURQUOISE", 300, 1, 15, 170 )
+	SetItem( "II_SYS_SYS_SCR_AQUAMARINE", 300, 1, 15, 170 )
+	SetItem( "II_SYS_SYS_SCR_AMETHYST", 300, 1, 15, 170 )
+	SetItem( "II_GEN_MAT_GARNET", 100, 1, 15, 170 )
+	SetItem( "II_GEN_MAT_TURQUOISE", 100, 1, 15, 170 )
+	SetItem( "II_GEN_MAT_AQUAMARINE", 100, 1, 15, 170 )
+	SetItem( "II_GEN_MAT_AMETHYST", 100, 1, 15, 170 )
+
+--}
+
+AddEvent( "St. Patrick Event 2022" )
+--{
+	SetTime( "2022-02-22 00:00", "2022-02-23 23:59" )
+	SetTime( "2022-02-24 07:00", "2022-03-24 06:59" )
+	SetItem( "II_SYS_SYS_EVE_CLOVER01_2022", 100000, 1, 15, 170 )
+	SetItem( "II_SYS_SYS_EVE_CLOVER01_2022", 100000, 1, 60, 170 )
+	SetItem( "II_SYS_SYS_EVE_CLOVER01_2022", 100000, 1, 100, 170 )
+	SetItem( "II_SYS_SYS_EVE_CLOVER01_2022", 50000, 1, 130, 170 )
+--}
+
+AddEvent( "Zubehör Upgrade Event" )
+--{
+	SetTime( "2022-03-04 00:00", "2022-03-24 06:59" )
+	SetItem( "II_SYS_SYS_EVE_CLOVER01_2022", 1, 1, 15, 170 )
+--}
+
+AddEvent( "Steinschlag und Schriftrollen Event" )
+--{
+	SetTime( "2022-03-21 00:00", "2022-03-23 23:59" )
+	SetTime( "2022-03-25 00:00", "2022-03-28 23:59" )
+
+	SetItem( "II_SYS_SYS_SCR_SCRAPMOONSTONE", 2000, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_SCRAPORICHALCUM", 1400, 1, 15, 172 )
+	SetItem( "II_GEN_MAT_ELE_CURRENTDUST", 2000, 1, 15, 172 )
+	SetItem( "II_GEN_MAT_LIGHTNINGSTONE", 800, 1, 15, 172 )
+	SetItem( "II_GEN_MAT_COSMOSTONE", 300, 1, 15, 172 )
+	SetItem( "II_GEN_MAT_ORICHALCUM01", 500, 1, 15, 172 )
+	SetItem( "II_GEN_MAT_MOONSTONE", 1000, 1, 15, 172 )
+	SetItem( "II_GEN_MAT_OPERCID", 500, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_ANNIVERSARY_CPR", 400, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_ANNIVERSARY_APR", 400, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_ANNIVERSARY_SPR", 400, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_ANNIVERSARY_GPR", 400, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_ANNIVERSARY_XPR", 400, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_ANNIVERSARY_SOA", 120, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_ANNIVERSARY_REA", 120, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_ANNIVERSARY_BBG", 120, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_ANNIVERSARY_UBB", 120, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_ANNIVERSARY_BOG", 120, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_ANNIVERSARY_SGR", 120, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_ANNIVERSARY_FPR", 120, 1, 15, 172 )
+	SetItem( "II_SYS_SYS_SCR_ANNIVERSARY_BAO", 120, 1, 15, 172 )
+--}
+
+AddEvent( "Oster Event 2022" )
+--{
+	SetTime( "2022-03-21 00:00", "2022-03-23 23:59" )
+	SetTime( "2022-03-24 00:00", "2022-04-21 23:59" )
+
+	SetSpawn( MONSTER, "MI_PET_RABBIT02_2022", 100000, 0 )
+	SetItem( "II_SYS_SYS_EVE_NATURALEGG_2022", 100000, 1, 15, 170 )
+	SetItem( "II_SYS_SYS_EVE_NATURALEGG_2022", 50000, 1, 60, 170 )
+	SetItem( "II_SYS_SYS_EVE_NATURALEGG_2022", 50000, 1, 100, 170 )
+--}
